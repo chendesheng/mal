@@ -35,6 +35,7 @@ IMPL:
   - {IMPL: gnu-smalltalk}
   - {IMPL: guile}
   - {IMPL: haskell}
+  - {IMPL: haskell.2}
   - {IMPL: haxe, haxe_MODE: neko}
   - {IMPL: haxe, haxe_MODE: python}
   - {IMPL: haxe, haxe_MODE: cpp, SLOW: 1}
