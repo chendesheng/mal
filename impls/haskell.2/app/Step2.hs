@@ -47,8 +47,8 @@ instance Show MalVal where
     show (MalVector l) = "[" <> unwords (map show l) <> "]"
     show (MalMap kvs) = "{" <> unwords (map show $ toList kvs) <> "}"
       where
-        toList xs = concat $ map pairToList xs
         pairToList (a, b) = [a, b]
+        toList = concatMap pairToList
     show (MalSymbol s) = unpack s
     show (MalInt i) = show i
     show (MalString s) = show s
@@ -86,8 +86,7 @@ malParser = do
             choice
                 [ do
                     fn <- fnParser
-                    ast <- parser
-                    pure $ MalCall fn ast
+                    MalCall fn <$> parser
                 , MalList <$> listParser
                 , MalMap <$> mapParser
                 , MalVector <$> vectorParser
@@ -108,7 +107,7 @@ malParser = do
             ]
 
     keywordParser :: Parser Text
-    keywordParser = (M.char ':') >> symbolParser
+    keywordParser = M.char ':' >> symbolParser
 
     fnParser :: Parser MalFn
     fnParser =
@@ -118,7 +117,7 @@ malParser = do
             , MalSpliceUnquote <$ M.try (M.string "~@")
             , MalUnquote <$ M.string "~"
             , MalDeref <$ M.string "@"
-            , MalWithMeta <$> ((M.string "^") *> parser)
+            , MalWithMeta <$> (M.string "^" *> parser)
             ]
 
     listParser =
@@ -168,8 +167,7 @@ read = do
     parse malParser "" <$> getLine
 
 eval :: MalVal -> Either String MalVal
-eval val =
-    go val
+eval = go
   where
     go :: MalVal -> Either String MalVal
     go (MalList (MalSymbol name : params)) =
@@ -201,7 +199,7 @@ libs =
   where
     malAdd :: [MalVal] -> Either String Integer
     malAdd [] = Left "Invalid number of arguments"
-    malAdd (MalInt a : []) = Right a
+    malAdd [MalInt a] = Right a
     malAdd (MalInt a : xs) =
         case malAdd xs of
             Right b -> Right $ a + b
@@ -211,7 +209,7 @@ libs =
 
     malSub :: [MalVal] -> Either String Integer
     malSub [] = Left "Invalid number of arguments"
-    malSub (MalInt a : []) = Right a
+    malSub [MalInt a] = Right a
     malSub (MalInt a : xs) =
         case malSub xs of
             Right b -> Right $ a - b
@@ -221,7 +219,7 @@ libs =
 
     malMul :: [MalVal] -> Either String Integer
     malMul [] = Left "Invalid number of arguments"
-    malMul (MalInt a : []) = Right a
+    malMul [MalInt a] = Right a
     malMul (MalInt a : xs) =
         case malMul xs of
             Right b -> Right $ a * b
@@ -231,7 +229,7 @@ libs =
 
     malDiv :: [MalVal] -> Either String Integer
     malDiv [] = Left "Invalid number of arguments"
-    malDiv (MalInt a : []) = Right a
+    malDiv [MalInt a] = Right a
     malDiv (MalInt a : xs) =
         case malDiv xs of
             Right b -> Right $ a `div` b

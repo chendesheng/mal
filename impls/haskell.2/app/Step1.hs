@@ -4,15 +4,13 @@ module Step1 where
 
 import Control.Monad (void)
 import Data.Char (isSpace)
-import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Text (Text, pack, unpack)
 import Data.Text.IO (getLine, putStrLn)
 import Data.Void (Void)
-import Text.Megaparsec (Parsec, choice, many, manyTill, parse, (<|>))
+import Text.Megaparsec (Parsec, choice, many, manyTill, parse)
 import Text.Megaparsec qualified as M
 import Text.Megaparsec.Char qualified as M
 import Text.Megaparsec.Char.Lexer qualified as L
-import Text.Megaparsec.Error qualified as M
 import Prelude hiding (getLine, print, putStrLn, read)
 
 type Parser = Parsec Void Text
@@ -48,7 +46,7 @@ instance Show MalAst where
     show (MalVector l) = "[" <> unwords (map show l) <> "]"
     show (MalMap kvs) = "{" <> unwords (map show $ toList kvs) <> "}"
       where
-        toList xs = concat $ map pairToList xs
+        toList = concatMap pairToList
         pairToList (a, b) = [a, b]
     show (MalSymbol s) = unpack s
     show (MalInt i) = show i
@@ -87,8 +85,7 @@ malParser = do
             choice
                 [ do
                     fn <- fnParser
-                    ast <- parser
-                    pure $ MalCall fn ast
+                    MalCall fn <$> parser
                 , MalList <$> listParser
                 , MalMap <$> mapParser
                 , MalVector <$> vectorParser
@@ -99,7 +96,7 @@ malParser = do
                 ]
 
     keywordParser :: Parser Text
-    keywordParser = (M.char ':') >> symbolParser
+    keywordParser = M.char ':' >> symbolParser
 
     fnParser :: Parser MalFn
     fnParser =
@@ -109,7 +106,7 @@ malParser = do
             , MalSpliceUnquote <$ M.try (M.string "~@")
             , MalUnquote <$ M.string "~"
             , MalDeref <$ M.string "@"
-            , MalWithMeta <$> ((M.string "^") *> parser)
+            , MalWithMeta <$> (M.string "^" *> parser)
             ]
 
     listParser =
