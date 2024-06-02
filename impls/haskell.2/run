@@ -1,5 +1,5 @@
 #!/bin/bash
 (
-    cd $(dirname $0)
-    exec cabal run mal -- "${STEP:-stepA_mal}" "${@}"
+	cd $(dirname $0)
+	exec cabal run mal -v0 -- "${STEP:-stepA_mal}" "${@}"
 )
