@@ -65,6 +65,7 @@ executable mal
     other-modules:
         Step0
         Step1
+        Step2
 
     -- LANGUAGE extensions used by modules in this package.
     other-extensions: OverloadedStrings
